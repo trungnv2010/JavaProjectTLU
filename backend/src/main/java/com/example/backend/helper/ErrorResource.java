@@ -1,5 +1,6 @@
 package com.example.backend.helper;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ErrorResource {
@@ -9,6 +10,10 @@ public class ErrorResource {
     public ErrorResource(String message, Map<String, String> errors) {
         this.message = message;
         this.errors = errors;
+    }
+    public ErrorResource(String message) {
+        this.message = message;
+        this.errors = new HashMap<String, String>();
     }
 
     public String getMessage() {
