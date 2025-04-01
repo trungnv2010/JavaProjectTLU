@@ -13,7 +13,6 @@ export const updateAuthMeAsync = createAsyncThunk(
     'auth/authMe',
     async (data: any) => {
         const response = await updateAuthMe(data)
-        console.log("response", response)
         return response.status
     }
 )

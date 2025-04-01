@@ -40,7 +40,6 @@ export const authSlice = createSlice({
             state.isLoading = true
         })
         builder.addCase(registerAuthAsync.fulfilled, (state, action) => {
-            console.log("action", action)
             state.isLoading = false
             state.isSuccess = action.payload === 200
             state.isError = false

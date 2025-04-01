@@ -16,8 +16,8 @@ export type TUserData = {
     id?: number
     role: string
     email: string
-    firstName: string
-    lastName: string
+    firstname: string
+    lastname: string
     phone: string,
     city: string,
 }
@@ -43,7 +43,7 @@ export const updateUser = async (data: TUserData) => {
 
 export const deleteUser = async (id: number) => {
     try {
-        const res = await instanceAxios.delete(`${CONFIG_API.USER.UPDATE}/${id}`)
+        const res = await instanceAxios.delete(`${CONFIG_API.USER.DELETE}/${id}`)
         return res
     } catch (e) {
         return e

@@ -78,13 +78,15 @@ const AuthProvider = ({children}: Props) => {
             .then(async response => {
                 window.localStorage.setItem(authConfig.storageTokenKeyName, response.accessToken)
                 const returnUrl = router.query.returnUrl
-                console.log('response', {response})
                 setUser({...response.user})
                 window.localStorage.setItem('userData', JSON.stringify(response.user))
-                const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-                router.replace(redirectURL as string)
+                if (response.user && response.user.role === "ADMIN") {
+                    router.replace('/admin')
+                } else {
+                    const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+                    router.replace(redirectURL as string)
+                }
             })
-
             .catch(err => {
                 if (errorCallback) errorCallback(err)
             })

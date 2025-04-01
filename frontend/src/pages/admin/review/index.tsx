@@ -1,11 +1,12 @@
 import {NextPage} from "next";
+import AdminReviewsPage from "src/views/pages/admin/review/AdminReviewPage";
 
 
 type TProps = {}
 
 const Index: NextPage<TProps> = () => {
     return (
-        <h1>Review</h1>
+        <AdminReviewsPage />
     )
 }
 export default Index

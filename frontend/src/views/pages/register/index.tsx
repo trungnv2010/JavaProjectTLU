@@ -72,7 +72,6 @@ const RegisterPage: NextPage<TProps> = () => {
         resolver: yupResolver(schema)
     })
 
-    console.log("success", isSuccess)
 
     useEffect(() => {
         if (isSuccess){

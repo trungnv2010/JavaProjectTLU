@@ -19,16 +19,16 @@ interface Redux {
     dispatch: Dispatch<any>
 }
 
-// Định nghĩa rõ ràng hơn cho kiểu dữ liệu người dùng
+// More detailed definition for user data type
 interface User {
-    id: number | null
+    id: number | string | null
     email: string | null
-    firstName: string | null
-    lastName: string | null
+    firstname: string | null
+    lastname: string | null
     role: string | null
     phone: string | null
     city: string | null
-    // Thêm các trường khác nếu cần
+    // Add other fields as needed
 }
 
 interface UserState {
@@ -36,9 +36,30 @@ interface UserState {
     total: number
     params: DataParams | {}
     allData: Array<User>
-    loading: boolean
-    error: any
+    loading: {
+        fetchAll: boolean
+        create: boolean
+        update: boolean
+        delete: boolean
+    }
+    error: {
+        fetchAll: any
+        create: any
+        update: any
+        delete: any
+    }
 }
+
+// Helper function to check response status and handle errors
+const handleResponse = (response: any) => {
+    // Check if the response has a status field and it's not 200
+    if (response.status && response.status !== 200) {
+        // Extract error message or use a default
+        const errorMessage = response.message || 'An error occurred';
+        return Promise.reject(errorMessage);
+    }
+    return response;
+};
 
 // ** Fetch Users
 export const fetchData = createAsyncThunk(
@@ -48,7 +69,7 @@ export const fetchData = createAsyncThunk(
             params
         })
 
-        return response.data
+        return handleResponse(response.data);
     }
 )
 
@@ -59,40 +80,44 @@ export const addUser = createAsyncThunk(
         const response = await axios.post('/apps/users/add-user', {
             data
         })
+        const checkedResponse = handleResponse(response.data);
         dispatch(fetchData(getState().user.params))
 
-        return response.data
+        return checkedResponse;
     }
 )
 
 // ** Get All Users
 export const getAllUserAsync = createAsyncThunk(
     'appUsers/getAllUsers',
-    async (data: { body: TPagination }) => {
+    async (data: TPagination) => {
         try {
             const response = await getAllUser(data)
-            // Đảm bảo response có cấu trúc đúng
-            if (!response.data) {
+            // Check response status
+            const checkedResponse = handleResponse(response);
+
+            // Ensure response has the correct structure
+            if (!checkedResponse.data) {
                 return { data: [], totalItems: 0 }
             }
 
-            // Đảm bảo mỗi người dùng có dữ liệu hợp lệ
-            const validatedData = (response.data || []).map((user: any) => ({
+            // Ensure each user has valid data
+            const validatedData = (checkedResponse.data || []).map((user: any) => ({
                 id: user?.id || null,
                 email: user?.email || null,
-                firstName: user?.firstName || null,
-                lastName: user?.lastName || null,
+                firstname: user?.firstname || null,
+                lastname: user?.lastname || null,
                 role: user?.role || null,
                 phone: user?.phone || null,
                 city: user?.city || null
-                // Thêm các trường khác nếu cần
+                // Add other fields as needed
             }))
 
             return {
                 data: validatedData,
-                totalItems: response.totalItems || 0
+                totalItems: checkedResponse.totalItems || 0
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching users:', error)
             throw error
         }
@@ -101,45 +126,64 @@ export const getAllUserAsync = createAsyncThunk(
 
 export const createUserAsync = createAsyncThunk(
     'appUsers/createUser',
-    async (data: { body: TUserData }) => {
+    async (data: TUserData, {dispatch}) => {
         try {
             const response = await createNewUser(data)
-            // Sau khi tạo người dùng thành công, lấy lại danh sách
-            dispatch(getAllUserAsync({ body: { page: 0, size: 0 } }))
-            return response
-        } catch (error) {
+            // Check response status
+            const checkedResponse = handleResponse(response);
+
+            // After successfully creating the user, fetch the list again
+            dispatch(getAllUserAsync({ page: -1, limit: -1 }))
+            return checkedResponse
+        } catch (error: any) {
             console.error('Error creating user:', error)
-            throw error
+            // Return the error in a structured way
+            if (typeof error === 'string') {
+                return Promise.reject(error);
+            }
+            return Promise.reject(error?.response?.data?.message || 'Failed to create user')
         }
     }
 )
 
 export const updateUserAsync = createAsyncThunk(
     'appUsers/updateUser',
-    async (data: { body: TUserData }, { dispatch }) => {
+    async (data: { id: string | number, [key: string]: any }, { dispatch }) => {
         try {
             const response = await updateUser(data)
-            // Sau khi cập nhật người dùng thành công, lấy lại danh sách
-            dispatch(getAllUserAsync({ body: { page: 0, size: 10 } }))
-            return response
-        } catch (error) {
+            // Check response status
+            const checkedResponse = handleResponse(response);
+
+            // After successfully updating the user, fetch the list again
+            dispatch(getAllUserAsync({ page: -1, limit: -1 }))
+            return checkedResponse
+        } catch (error: any) {
             console.error('Error updating user:', error)
-            throw error
+            if (typeof error === 'string') {
+                return Promise.reject(error);
+            }
+            return Promise.reject(error?.response?.data?.message || 'Failed to update user')
         }
     }
 )
 
 export const deleteUserAsync = createAsyncThunk(
     'appUsers/deleteUser',
-    async (id: number, { dispatch }) => {
+    async (id: string | number, { dispatch }) => {
         try {
             const response = await deleteUser(id)
-            // Sau khi xóa người dùng thành công, lấy lại danh sách
-            dispatch(getAllUserAsync({ body: { page: 0, size: 10 } }))
-            return response
-        } catch (error) {
+            // Check response status
+            const checkedResponse = handleResponse(response);
+
+            // After successfully deleting the user, fetch the list again
+            dispatch(getAllUserAsync({ page: -1, limit: -1 }))
+            return checkedResponse
+        } catch (error: any) {
             console.error('Error deleting user:', error)
-            throw error
+            if (typeof error === 'string') {
+                return Promise.reject(error);
+            }
+            return Promise.reject(error?.response?.data?.message || 'Failed to delete user')
         }
     }
 )
@@ -149,8 +193,18 @@ const initialState: UserState = {
     total: 1,
     params: {},
     allData: [],
-    loading: false,
-    error: null
+    loading: {
+        fetchAll: false,
+        create: false,
+        update: false,
+        delete: false
+    },
+    error: {
+        fetchAll: null,
+        create: null,
+        update: null,
+        delete: null
+    }
 }
 
 export const appUsersSlice = createSlice({
@@ -158,7 +212,12 @@ export const appUsersSlice = createSlice({
     initialState,
     reducers: {
         clearErrors: (state) => {
-            state.error = null
+            state.error = {
+                fetchAll: null,
+                create: null,
+                update: null,
+                delete: null
+            }
         },
         resetInitialState: () => {
             return initialState
@@ -167,75 +226,78 @@ export const appUsersSlice = createSlice({
     extraReducers: builder => {
         // fetchData reducers
         builder.addCase(fetchData.pending, (state) => {
-            state.loading = true
+            state.loading.fetchAll = true
         })
         builder.addCase(fetchData.fulfilled, (state, action) => {
             state.data = action.payload.users || []
             state.total = action.payload.total || 0
             state.params = action.payload.params || {}
             state.allData = action.payload.allData || []
-            state.loading = false
-            state.error = null
+            state.loading.fetchAll = false
+            state.error.fetchAll = null
         })
         builder.addCase(fetchData.rejected, (state, action) => {
-            state.loading = false
-            state.error = action.error
+            state.loading.fetchAll = false
+            state.error.fetchAll = action.error.message || 'Failed to fetch data'
         })
 
         // getAllUserAsync reducers
         builder.addCase(getAllUserAsync.pending, (state) => {
-            state.loading = true
+            state.loading.fetchAll = true
         })
         builder.addCase(getAllUserAsync.fulfilled, (state, action) => {
-            // Đảm bảo dữ liệu không bao giờ là undefined/null
+            // Ensure data is never undefined/null
             state.allData = action.payload.data || []
             state.total = action.payload.totalItems || 0
-            state.loading = false
-            state.error = null
+            state.loading.fetchAll = false
+            state.error.fetchAll = null
         })
         builder.addCase(getAllUserAsync.rejected, (state, action) => {
-            state.loading = false
-            state.error = action.error
-            // Không reset dữ liệu hiện có khi có lỗi
+            state.loading.fetchAll = false
+            state.error.fetchAll = action.error.message || 'Failed to fetch users'
+            // Don't reset existing data when there's an error
         })
 
         // createUserAsync reducers
         builder.addCase(createUserAsync.pending, (state) => {
-            state.loading = true
+            state.loading.create = true
+            state.error.create = null
         })
         builder.addCase(createUserAsync.fulfilled, (state) => {
-            state.loading = false
-            state.error = null
+            state.loading.create = false
+            state.error.create = null
         })
         builder.addCase(createUserAsync.rejected, (state, action) => {
-            state.loading = false
-            state.error = action.error
+            state.loading.create = false
+            state.error.create = action.error.message || 'Failed to create user'
         })
 
         // updateUserAsync reducers
         builder.addCase(updateUserAsync.pending, (state) => {
-            state.loading = true
+            state.loading.update = true
+            state.error.update = null
         })
         builder.addCase(updateUserAsync.fulfilled, (state) => {
-            state.loading = false
-            state.error = null
+            state.loading.update = false
+            state.error.update = null
         })
         builder.addCase(updateUserAsync.rejected, (state, action) => {
-            state.loading = false
-            state.error = action.error
+            state.loading.update = false
+            state.error.update = action.error.message || 'Failed to update user'
         })
 
         // deleteUserAsync reducers
         builder.addCase(deleteUserAsync.pending, (state) => {
-            state.loading = true
+            state.loading.delete = true
+            state.error.delete = null
         })
         builder.addCase(deleteUserAsync.fulfilled, (state) => {
-            state.loading = false
-            state.error = null
+            state.loading.delete = false
+            state.error.delete = null
         })
         builder.addCase(deleteUserAsync.rejected, (state, action) => {
-            state.loading = false
-            state.error = action.error
+            state.loading.delete = false
+            state.error.delete = action.error.message || 'Failed to delete user'
         })
     }
 })

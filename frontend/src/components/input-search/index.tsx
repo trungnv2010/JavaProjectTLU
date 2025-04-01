@@ -1,10 +1,14 @@
 import IconifyIcon from "src/components/Icon";
 import * as React from "react";
 import {IconButton, InputBase, styled, useTheme} from "@mui/material";
+import {useEffect, useState} from "react";
+import {useDebounce} from "src/hooks/useDebounce";
 
 
-
-type TSearch = {}
+type TSearch = {
+    value: string
+    onChange: (value: string) => void
+}
 
 const Search = styled('div')(({theme}) => ({
     position: 'relative',
@@ -30,7 +34,7 @@ const SearchIconWrapper = styled('div')(({theme}) => ({
     justifyContent: 'center',
 }));
 
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
+const StyledInputBase = styled(InputBase)(({theme}) => ({
     color: 'inherit',
     width: '100%',
     height: '100%',
@@ -43,13 +47,25 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 const InputSearch = (props: TSearch) => {
     const theme = useTheme()
+    const {value, onChange} = props
+    const [search, setSearch] = useState(value)
+    const debounceSearch = useDebounce(search, 300)
+    useEffect(() => {
+        onChange(debounceSearch)
+    },[debounceSearch])
     return (
-       <Search>
-           <SearchIconWrapper>
-               <IconifyIcon icon={"iconamoon:search-thin"} />
-           </SearchIconWrapper>
-           <StyledInputBase placeholder={"Search..."} inputProps={{'arial-label': 'search'}} />
-       </Search>
+        <Search>
+            <SearchIconWrapper>
+                <IconifyIcon icon={"iconamoon:search-thin"}/>
+            </SearchIconWrapper>
+            <StyledInputBase
+                value={search}
+                placeholder={"Search..."}
+                inputProps={{'arial-label': 'search'}}
+                onChange={(e) => {
+                    setSearch(e.target.value)
+                }}/>
+        </Search>
     )
 }
 export default InputSearch

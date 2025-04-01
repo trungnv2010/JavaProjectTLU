@@ -85,12 +85,13 @@ const UserDropDown = (props: TProps) => {
                     <Avatar /> <Box sx={{ ml: 2 }}>{user?.email}</Box>
                 </MenuItem>
                 <Divider/>
-                <MenuItem onClick={handleClose}>
-                    <ListItemIcon>
-                        {/*<PersonAdd fontSize="small"/>*/}
-                    </ListItemIcon>
-                    Add another account
-                </MenuItem>
+                {user.role === "ADMIN" && (
+                    <MenuItem onClick={() => {router.push("/admin")}}>
+                        <ListItemIcon>
+                        </ListItemIcon>
+                        Admin Page
+                    </MenuItem>
+                )}
                 <MenuItem onClick={handleClose}>
                     <ListItemIcon>
                         {/*<Settings fontSize="small"/>*/}

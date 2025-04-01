@@ -18,6 +18,7 @@ export type TUpdateAuthMe = {
 }
 
 export type TPagination = {
-    page: number,
-    limit: number,
+    page?: number,
+    limit?: number,
+    search?: string
 }

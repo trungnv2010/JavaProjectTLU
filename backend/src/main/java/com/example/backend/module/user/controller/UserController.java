@@ -96,14 +96,16 @@ public class UserController {
 
     @PostMapping("/user/all")
     public ResponseEntity<List<UserDTO>> getAllUsers(@RequestBody PaginationRequest request) {
-        logger.info("page: " + request);
-        List<UserDTO> users = userService.getAllUsers(request.getPage(), request.getLimit());
+        List<UserDTO> users = userService.getAllUsers(
+                request.getPage(),
+                request.getLimit(),
+                request.getSearch()
+        );
         return ResponseEntity.ok(users);
     }
 
     @PostMapping("/user/create")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        logger.info("Creating user: " + userDTO);
         UserDTO createdUser = userService.createUser(userDTO);
         return ResponseEntity.ok(createdUser);
     }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {Box, Button, IconButton, styled, Typography, useTheme} from "@mui/material";
 import CustomModal from "src/components/custom-modal";
 import {Controller, useForm} from "react-hook-form";
@@ -7,49 +7,108 @@ import {EMAIL_REG} from "src/configs/regex";
 import {yupResolver} from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import IconifyIcon from "src/components/Icon";
-import {createNewUser, TUserData, updateUser} from "src/services/user";
-import {useDispatch} from "react-redux";
-import {AppDispatch} from "src/stores";
-import {createUserAsync} from "src/stores/apps/user";
-
+import {TUserData} from "src/services/user";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState} from "src/stores";
+import {createUserAsync, updateUserAsync} from "src/stores/apps/user";
+import toast from "react-hot-toast";
 
 type TCreateEditUser = {
     open: boolean,
     onClose: () => void,
-    idUser?: string
+    idUser?: string,
+    data?: any
 }
+
 const SubmitButton = styled(Button)(({theme}) => ({
     margin: theme.spacing(3, 0, 2),
 }));
 
-
 const CreateEditUser = (props: TCreateEditUser) => {
-    const {open, onClose, idUser} = props
+    const {open, onClose, idUser, data} = props
     const theme = useTheme()
     const schema = yup.object()
         .shape({
-            email: yup.string().required("The field is required").matches(EMAIL_REG, "The field is must email type"),
+            email: yup.string().required("Email is required").matches(EMAIL_REG, "Must be a valid email"),
+            firstname: yup.string().required("First name is required"),
+            lastname: yup.string().required("Last name is required"),
+            phone: yup.string().required("Phone number is required"),
+            city: yup.string().required("City is required"),
         })
-    const dispatch:AppDispatch = useDispatch()
+    const dispatch: AppDispatch = useDispatch()
+
+    // Get error states from Redux store
+    const { error, loading } = useSelector((state: RootState) => state.user);
+
     const {
         handleSubmit,
         control,
-        formState: {errors}
+        formState: {errors},
+        reset,
+        setValue
     } = useForm({
         defaultValues: {
             email: '',
+            firstname: '',
+            lastname: '',
+            phone: '',
+            city: '',
             password: ''
         },
         mode: "onBlur",
         resolver: yupResolver(schema)
     })
 
-    const onSubmit = (data: TUserData) => {
-        if (idUser === ""){
-            dispatch(createUserAsync( {...data,password: "123456", role: "USER"}));
-            onClose();
+    // Fill in user information when editing
+    useEffect(() => {
+        if (idUser && idUser !== "" && data) {
+            setValue("email", data.email || "");
+            setValue("firstname", data.firstname || "");
+            setValue("lastname", data.lastname || "");
+            setValue("phone", data.phone || "");
+            setValue("city", data.city || "");
         } else {
+            reset({
+                email: '',
+                firstname: '',
+                lastname: '',
+                phone: '',
+                city: '',
+                password: ''
+            });
+        }
+    }, [idUser, data, setValue, reset]);
 
+    // Show error messages from Redux state in toast
+    useEffect(() => {
+        if (error.create) {
+            toast.error(`Create user failed: ${error.create}`);
+            onClose();
+        }
+        if (error.update) {
+            toast.error(`Update user failed: ${error.update}`);
+            onClose();
+        }
+    }, [error.create, error.update]);
+
+    const onSubmit = async (formData: TUserData) => {
+        try {
+            if (idUser === "") {
+                // Create new user
+                await dispatch(createUserAsync({...formData, password: "123456", role: "USER"})).unwrap();
+                toast.success("User created successfully!");
+                onClose();
+            } else {
+                // Update user
+                await dispatch(updateUserAsync({
+                    id: idUser,
+                    ...formData
+                })).unwrap();
+                toast.success("User updated successfully!");
+                onClose();
+            }
+        } catch (error: any) {
+            console.error("Form submission error:", error);
         }
     }
 
@@ -59,7 +118,7 @@ const CreateEditUser = (props: TCreateEditUser) => {
                  minWidth={{md: '400px'}}>
                 <Box sx={{display: "flex", justifyContent: "center", position: 'relative', paddingBottom: '20px'}}>
                     <Typography variant={'h3'}
-                                sx={{fontWeight: '600'}}>{idUser === "" ? "Create new user" : "Update user"}</Typography>
+                                sx={{fontWeight: '600'}}>{idUser === "" ? "Create New User" : "Update User"}</Typography>
                     <IconButton sx={{position: 'absolute', top: '-6px', right: '-10px'}} onClick={onClose}>
                         <IconifyIcon icon={"ic:baseline-close"} fontSize={30}/>
                     </IconButton>
@@ -80,8 +139,8 @@ const CreateEditUser = (props: TCreateEditUser) => {
                                     onChange={onChange}
                                     onBlur={onBlur}
                                     value={value}
-                                    error={!!errors.firstName}
-                                    helperText={errors.firstName?.message}
+                                    error={!!errors.firstname}
+                                    helperText={errors.firstname?.message}
                                 />
                             )}
                             name="firstname"
@@ -102,8 +161,8 @@ const CreateEditUser = (props: TCreateEditUser) => {
                                     onChange={onChange}
                                     onBlur={onBlur}
                                     value={value}
-                                    error={!!errors.firstName}
-                                    helperText={errors.firstName?.message}
+                                    error={!!errors.lastname}
+                                    helperText={errors.lastname?.message}
                                 />
                             )}
                             name="lastname"
@@ -146,8 +205,8 @@ const CreateEditUser = (props: TCreateEditUser) => {
                                     onChange={onChange}
                                     onBlur={onBlur}
                                     value={value}
-                                    error={!!errors.firstName}
-                                    helperText={errors.firstName?.message}
+                                    error={!!errors.phone}
+                                    helperText={errors.phone?.message}
                                 />
                             )}
                             name="phone"
@@ -167,8 +226,8 @@ const CreateEditUser = (props: TCreateEditUser) => {
                                     onChange={onChange}
                                     onBlur={onBlur}
                                     value={value}
-                                    error={!!errors.firstName}
-                                    helperText={errors.firstName?.message}
+                                    error={!!errors.city}
+                                    helperText={errors.city?.message}
                                 />
                             )}
                             name="city"
@@ -179,14 +238,15 @@ const CreateEditUser = (props: TCreateEditUser) => {
                             type="submit"
                             variant="contained"
                             color="primary"
+                            disabled={loading.create || loading.update}
                         >
                             {idUser === "" ? "Create" : "Save"}
                         </SubmitButton>
                     </Box>
-
                 </form>
             </Box>
         </CustomModal>
     )
 }
+
 export default CreateEditUser

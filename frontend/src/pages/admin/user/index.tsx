@@ -7,7 +7,6 @@ type TProps = {}
 
 const Index: NextPage<TProps> = () => {
     const handleClose = () => {
-        console.log("hihi")
     }
     return (
         <AdminUserPage/>

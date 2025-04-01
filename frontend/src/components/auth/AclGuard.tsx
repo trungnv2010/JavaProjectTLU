@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // ** React Imports
-import {ReactNode} from 'react'
+import {ReactNode, useEffect} from 'react'
 
 // ** Types
 import type {ACLObj, AppAbility} from 'src/configs/acl'
@@ -25,6 +25,17 @@ const AclGuard = (props: AclGuardProps) => {
     const router = useRouter()
     const permissionUser = auth.user?.role ?? "USER"
     let ability: AppAbility
+
+    const isAdminPage = router.pathname.startsWith('/admin')
+
+    const isAdmin = permissionUser === "ADMIN"
+
+    useEffect(() => {
+        if (isAdminPage && !isAdmin && auth.user) {
+            router.replace('/401')
+        }
+    }, [isAdminPage, isAdmin, auth.user, router])
+
     if (auth.user && !ability) {
         ability = buildAbilityFor(permissionUser, aclAbilities.subject)
     }
@@ -37,12 +48,18 @@ const AclGuard = (props: AclGuardProps) => {
         }
     }
 
+    if (isAdminPage && !isAdmin) {
+        return <BlankLayout>
+            <NotAuthorize />
+        </BlankLayout>
+    }
+
     if (ability && auth.user && ability.can(aclAbilities.action, aclAbilities.subject)) {
         return <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
     }
 
     return <BlankLayout>
-        {children}
+        <NotAuthorize />
     </BlankLayout>
 }
 

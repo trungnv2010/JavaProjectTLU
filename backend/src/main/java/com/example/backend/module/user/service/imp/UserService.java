@@ -171,7 +171,7 @@ public class UserService implements UserDetailsService {
         return convertToDTO(user);
     }
 
-    public List<UserDTO> getAllUsers(int page, int limit) {
+    public List<UserDTO> getAllUsers(int page, int limit, String search) {
         if (page < 0) {
             page = 0;
         }
@@ -179,7 +179,13 @@ public class UserService implements UserDetailsService {
             limit = 10;
         }
         Pageable pageable = PageRequest.of(page, limit);
-        Page<User> userPage = userRepository.findAll(pageable);
+
+        Page<User> userPage;
+        if (search != null && !search.trim().isEmpty()) {
+            userPage = userRepository.searchUsers(search.trim(), pageable);
+        } else {
+            userPage = userRepository.findAll(pageable);
+        }
         List<UserDTO> userDTOList = userPage.getContent()
                 .stream()
                 .map(this::convertToDTO)
@@ -199,7 +205,7 @@ public class UserService implements UserDetailsService {
 
     public UserDTO updateUser(Long id, UserDTO userDTO) {
         User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
+        if (!existingUser.getEmail().equals(userDTO.getEmail()) && userRepository.existsByEmail(userDTO.getEmail())) {
             throw new IllegalArgumentException("Email address already in use");
         }
         existingUser.setEmail(userDTO.getEmail());

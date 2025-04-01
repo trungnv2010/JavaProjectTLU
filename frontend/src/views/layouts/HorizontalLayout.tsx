@@ -40,7 +40,9 @@ const HorizontalLayout: NextPage<TProps> = () => {
                     noWrap
                     sx={{flexGrow: 1}}
                 >
-                    Dashboard
+                    <IconButton onClick={() => router.push('/')}>
+                        <IconifyIcon icon={"material-symbols-light:home-outline-rounded"} color={"white"} fontSize={40} />
+                    </IconButton>
                 </Typography>
                 <IconButton color="inherit" sx={{marginRight: 5}}>
                     <Badge badgeContent={4} color="secondary">

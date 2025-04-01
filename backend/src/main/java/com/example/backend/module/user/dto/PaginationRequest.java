@@ -6,4 +6,5 @@ import lombok.Data;
 public class PaginationRequest {
     private int page;
     private int limit;
+    private String search;
 }
