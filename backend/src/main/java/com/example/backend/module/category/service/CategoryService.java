@@ -67,7 +67,6 @@ public class CategoryService {
             if (categoryRepository.existsBySlug(slug)) {
                 slug = slug + "-" + System.currentTimeMillis();
             }
-
             logger.info("Creating category with name: {} and generated slug: {}", categoryDTO.getName(), slug);
 
             Category category = convertToEntity(categoryDTO);

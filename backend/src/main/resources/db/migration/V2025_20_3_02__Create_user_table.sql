@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS `_user` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Bảng categories (Danh mục sản phẩm)
 CREATE TABLE IF NOT EXISTS `category` (
                                           `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
                                           `name` VARCHAR(255) NOT NULL,
@@ -23,7 +22,6 @@ CREATE TABLE IF NOT EXISTS `category` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng products (Sản phẩm)
 CREATE TABLE IF NOT EXISTS `product` (
                                          `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
                                          `category_id` BIGINT NOT NULL,

@@ -135,7 +135,9 @@ const OrderDetails = (props: TOrderDetails) => {
             })
             .catch((error) => {
                 console.error("Update status error:", error);
-            });
+            }).finally(() => {
+                onClose()
+        });
     };
 
     const handleUpdatePaymentStatus = () => {
@@ -148,11 +150,14 @@ const OrderDetails = (props: TOrderDetails) => {
         dispatch(updatePaymentStatusAsync({ id: orderId, data }))
             .unwrap()
             .then(() => {
+                onClose();
                 toast.success("Payment status updated successfully!");
             })
             .catch((error) => {
                 console.error("Update payment status error:", error);
-            });
+            }).finally(() => {
+                onClose();
+        });
     };
 
     if (!selectedOrder) {

@@ -112,7 +112,7 @@ export const createCategoryAsync = createAsyncThunk(
             const checkedResponse = handleResponse(response.data);
 
             // After successfully creating the category, fetch the list again
-            dispatch(getAllCategoriesAsync({ page: 0, limit: 10 }))
+            dispatch(getAllCategoriesAsync({ page: 0, limit: 10, search: "" }))
             return checkedResponse
         } catch (error: any) {
             console.error('Error creating category:', error)
@@ -139,7 +139,7 @@ export const updateCategoryAsync = createAsyncThunk(
             const checkedResponse = handleResponse(response.data);
 
             // After successfully updating the category, fetch the list again
-            dispatch(getAllCategoriesAsync({ page: 0, limit: 10 }))
+            dispatch(getAllCategoriesAsync({ page: 0, limit: 10, search: "" }))
             return checkedResponse
         } catch (error: any) {
             console.error('Error updating category:', error)
@@ -165,7 +165,7 @@ export const deleteCategoryAsync = createAsyncThunk(
             const checkedResponse = handleResponse(response.data);
 
             // After successfully deleting the category, fetch the list again
-            dispatch(getAllCategoriesAsync({ page: 0, limit: 10 }))
+            dispatch(getAllCategoriesAsync({ page: 0, limit: 10, search: "" }))
             return checkedResponse
         } catch (error: any) {
             console.error('Error deleting category:', error)

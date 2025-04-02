@@ -10,6 +10,15 @@ import {
     TextField,
     Typography,
     useTheme,
+    Autocomplete,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    List,
+    ListItem,
+    ListItemText,
+    CircularProgress,
+    Divider,
 } from "@mui/material";
 import {AppDispatch, RootState} from "src/stores";
 import {useDispatch, useSelector} from "react-redux";
@@ -29,8 +38,22 @@ import toast from "react-hot-toast";
 import ReviewDetailDialog from "src/views/pages/admin/review/ReviewDetailDialog";
 import GridEdit from "src/components/grid-edit";
 import GridDelete from "src/components/grid-delete";
+import { getAllUserAsync } from "src/stores/apps/user";
+import { getAllProductsAsync } from "src/stores/apps/product";
 
 type TProps = {};
+
+interface UserOption {
+    id: string;
+    name: string;
+    email?: string;
+}
+
+interface ProductOption {
+    id: string;
+    name: string;
+    price?: number;
+}
 
 const AdminReviewsPage: NextPage<TProps> = () => {
     const dispatch: AppDispatch = useDispatch();
@@ -46,11 +69,50 @@ const AdminReviewsPage: NextPage<TProps> = () => {
         (state: RootState) => state.review
     );
 
+    const users = useSelector((state: RootState) => state.user.allData);
+    const products = useSelector((state: RootState) => state.product.allData);
+
     const [filterType, setFilterType] = useState("product");
     const [filterId, setFilterId] = useState("");
     const [searchValue, setSearchValue] = useState("");
     const [page, setPage] = useState(0);
     const [limit, setLimit] = useState(10);
+
+    const [openUserSelect, setOpenUserSelect] = useState(false);
+    const [openProductSelect, setOpenProductSelect] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(null);
+    const [userOptions, setUserOptions] = useState<UserOption[]>([]);
+    const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
+    const [userSearchTerm, setUserSearchTerm] = useState("");
+    const [productSearchTerm, setProductSearchTerm] = useState("");
+
+    useEffect(() => {
+        dispatch(getAllUserAsync({ page: -1, limit: -1 }));
+        dispatch(getAllProductsAsync({ page: -1, limit: -1, search:"" }));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (users && users.length > 0) {
+            const options = users.map((user: any) => ({
+                id: user.id.toString(),
+                name: `${user.firstname || ''} ${user.lastname || ''}`.trim() || 'Unknown User',
+                email: user.email
+            }));
+            setUserOptions(options);
+        }
+    }, [users]);
+
+    useEffect(() => {
+        if (products && products.length > 0) {
+            const options = products.map((product: any) => ({
+                id: product.id.toString(),
+                name: product.name || 'Unknown Product',
+                price: product.price
+            }));
+            setProductOptions(options);
+        }
+    }, [products]);
 
     const handleGetReviews = () => {
         if (filterType === "product" && filterId) {
@@ -160,11 +222,9 @@ const AdminReviewsPage: NextPage<TProps> = () => {
                 <Box>
                     <GridEdit onClick={() => {
                         handleViewDetail(params.row.id)
-
                     }}/>
                     <GridDelete onClick={() => {
                         handleDeleteReview(params.row.id, params.row.productId)
-
                     }}/>
                 </Box>
             ),
@@ -183,6 +243,43 @@ const AdminReviewsPage: NextPage<TProps> = () => {
         }
     }, [error.delete]);
 
+    const handleOpenUserSelect = () => {
+        setOpenUserSelect(true);
+    };
+
+    const handleCloseUserSelect = () => {
+        setOpenUserSelect(false);
+    };
+
+    const handleOpenProductSelect = () => {
+        setOpenProductSelect(true);
+    };
+
+    const handleCloseProductSelect = () => {
+        setOpenProductSelect(false);
+    };
+
+    const handleUserSelect = (user: UserOption) => {
+        setSelectedUser(user);
+        setFilterId(user.id);
+        handleCloseUserSelect();
+    };
+
+    const handleProductSelect = (product: ProductOption) => {
+        setSelectedProduct(product);
+        setFilterId(product.id);
+        handleCloseProductSelect();
+    };
+
+    const filteredUserOptions = userOptions.filter(
+        user => user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+            (user.email && user.email.toLowerCase().includes(userSearchTerm.toLowerCase()))
+    );
+
+    const filteredProductOptions = productOptions.filter(
+        product => product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
+    );
+
     return (
         <>
             <ReviewDetailDialog
@@ -190,6 +287,79 @@ const AdminReviewsPage: NextPage<TProps> = () => {
                 onClose={() => setOpenDetail({open: false, id: ""})}
                 reviewId={openDetail.id}
             />
+
+            <Dialog open={openUserSelect} onClose={handleCloseUserSelect} maxWidth="sm" fullWidth>
+                <DialogTitle>Select User</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Search Users"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        sx={{ mb: 2 }}
+                    />
+                    <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                        {filteredUserOptions.length > 0 ? (
+                            filteredUserOptions.map((user) => (
+                                <React.Fragment key={user.id}>
+                                    <ListItem button onClick={() => handleUserSelect(user)}>
+                                        <ListItemText
+                                            primary={user.name}
+                                            secondary={user.email}
+                                        />
+                                    </ListItem>
+                                    <Divider />
+                                </React.Fragment>
+                            ))
+                        ) : (
+                            <ListItem>
+                                <ListItemText primary="No users found" />
+                            </ListItem>
+                        )}
+                    </List>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={openProductSelect} onClose={handleCloseProductSelect} maxWidth="sm" fullWidth>
+                <DialogTitle>Select Product</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Search Products"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={productSearchTerm}
+                        onChange={(e) => setProductSearchTerm(e.target.value)}
+                        sx={{ mb: 2 }}
+                    />
+                    <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                        {filteredProductOptions.length > 0 ? (
+                            filteredProductOptions.map((product) => (
+                                <React.Fragment key={product.id}>
+                                    <ListItem button onClick={() => handleProductSelect(product)}>
+                                        <ListItemText
+                                            primary={product.name}
+                                            secondary={product.price ? `$${product.price}` : undefined}
+                                        />
+                                    </ListItem>
+                                    <Divider />
+                                </React.Fragment>
+                            ))
+                        ) : (
+                            <ListItem>
+                                <ListItemText primary="No products found" />
+                            </ListItem>
+                        )}
+                    </List>
+                </DialogContent>
+            </Dialog>
+
             <Box
                 sx={{
                     backgroundColor: theme.palette.background.paper,
@@ -227,6 +397,8 @@ const AdminReviewsPage: NextPage<TProps> = () => {
                                     onChange={(e) => {
                                         setFilterType(e.target.value);
                                         setFilterId("");
+                                        setSelectedUser(null);
+                                        setSelectedProduct(null);
                                     }}
                                     sx={{width: {xs: "100%", md: "150px"}}}
                                 >
@@ -234,14 +406,55 @@ const AdminReviewsPage: NextPage<TProps> = () => {
                                     <MenuItem value="user">User</MenuItem>
                                 </TextField>
 
-                                <Box sx={{width: {xs: "100%", md: "220px"}}}>
-                                    <TextField
-                                        fullWidth
-                                        label={filterType === "product" ? "Product ID" : "User ID"}
-                                        size="small"
-                                        value={filterId}
-                                        onChange={(e) => setFilterId(e.target.value)}
-                                    />
+                                <Box sx={{
+                                    width: {xs: "100%", md: "300px"},
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1
+                                }}>
+                                    {filterType === "user" ? (
+                                        <>
+                                            <TextField
+                                                fullWidth
+                                                label="User"
+                                                size="small"
+                                                value={selectedUser ? selectedUser.name : ""}
+                                                InputProps={{
+                                                    readOnly: true,
+                                                }}
+                                                onClick={handleOpenUserSelect}
+                                                sx={{ cursor: "pointer" }}
+                                            />
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={handleOpenUserSelect}
+                                            >
+                                                Select
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <TextField
+                                                fullWidth
+                                                label="Product"
+                                                size="small"
+                                                value={selectedProduct ? selectedProduct.name : ""}
+                                                InputProps={{
+                                                    readOnly: true,
+                                                }}
+                                                onClick={handleOpenProductSelect}
+                                                sx={{ cursor: "pointer" }}
+                                            />
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={handleOpenProductSelect}
+                                            >
+                                                Select
+                                            </Button>
+                                        </>
+                                    )}
                                 </Box>
 
                                 <Button

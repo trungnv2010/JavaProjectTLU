@@ -1,4 +1,4 @@
-import { NextPage } from "next";
+import {NextPage} from "next";
 import {
     Box,
     Button,
@@ -12,25 +12,27 @@ import {
 } from "@mui/material";
 
 
-import { AppDispatch, RootState } from "src/stores";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/router";
+import {AppDispatch, RootState} from "src/stores";
+import {useDispatch, useSelector} from "react-redux";
+import {useRouter} from "next/router";
 import {
     cancelOrderAsync,
     getOrderByIdAsync,
     searchOrdersAsync,
 } from "src/stores/apps/order";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import CustomDataGrid from "src/components/custom-data-grid";
 import React from "react";
-import { GridColDef } from "@mui/x-data-grid";
+import {GridColDef} from "@mui/x-data-grid";
 import InputSearch from "src/components/input-search";
 import OrderDetails from "src/views/pages/admin/order/components/OrderDetails";
 import format from "date-fns/format";
 import toast from "react-hot-toast";
-import { TOrderStatus, TPaymentStatus } from "src/services/order";
+import {TOrderStatus, TPaymentStatus} from "src/services/order";
 import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFnsV3";
+import GridEdit from "src/components/grid-edit";
+import GridDelete from "src/components/grid-delete";
 
 type TProps = {};
 
@@ -44,7 +46,7 @@ const AdminOrderPage: NextPage<TProps> = () => {
         id: "",
     });
 
-    const { data, total, loading, error } = useSelector(
+    const {data, total, loading, error} = useSelector(
         (state: RootState) => state.order
     );
 
@@ -73,6 +75,7 @@ const AdminOrderPage: NextPage<TProps> = () => {
 
     useEffect(() => {
         if (error.cancel) {
+
             toast.error(`Cancel order failed: ${error.cancel}`);
         }
     }, [error.cancel]);
@@ -147,19 +150,19 @@ const AdminOrderPage: NextPage<TProps> = () => {
     };
 
     const handleSearchChange = (value: string) => {
-        setSearchParams({ ...searchParams, search: value });
+        setSearchParams({...searchParams, search: value});
     };
 
     const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchParams({ ...searchParams, status: event.target.value });
+        setSearchParams({...searchParams, status: event.target.value});
     };
 
     const handleStartDateChange = (date: Date | null) => {
-        setSearchParams({ ...searchParams, startDate: date });
+        setSearchParams({...searchParams, startDate: date});
     };
 
     const handleEndDateChange = (date: Date | null) => {
-        setSearchParams({ ...searchParams, endDate: date });
+        setSearchParams({...searchParams, endDate: date});
     };
 
     const handleResetFilters = () => {
@@ -241,23 +244,12 @@ const AdminOrderPage: NextPage<TProps> = () => {
             renderCell: (params) => {
                 return (
                     <Box>
-                        <IconButton
-                            onClick={() => handleViewOrderDetails(params.row.id)}
-                            size="small"
-                            color="primary"
-                        >
-                            <i className="fa-solid fa-eye"></i>
-                        </IconButton>
-
-                        {params.row.status !== "delivered" && params.row.status !== "cancelled" && (
-                            <IconButton
-                                onClick={() => handleCancelOrder(params.row.id)}
-                                size="small"
-                                color="error"
-                            >
-                                <i className="fa-solid fa-ban"></i>
-                            </IconButton>
-                        )}
+                        <GridEdit onClick={() => {
+                            handleViewOrderDetails(params.row.id)
+                        }}/>
+                        <GridDelete onClick={() => {
+                            handleCancelOrder(params.row.id)
+                        }}/>
                     </Box>
                 );
             },
@@ -309,7 +301,7 @@ const AdminOrderPage: NextPage<TProps> = () => {
                                     alignItems: "center",
                                 }}
                             >
-                                <Box sx={{ width: { xs: "100%", md: "230px" } }}>
+                                <Box sx={{width: {xs: "100%", md: "230px"}}}>
                                     <InputSearch
                                         value={searchParams.search}
                                         onChange={handleSearchChange}
@@ -323,7 +315,7 @@ const AdminOrderPage: NextPage<TProps> = () => {
                                     size="small"
                                     value={searchParams.status}
                                     onChange={handleStatusChange}
-                                    sx={{ width: { xs: "100%", md: "150px" } }}
+                                    sx={{width: {xs: "100%", md: "150px"}}}
                                 >
                                     <MenuItem value="">All</MenuItem>
                                     <MenuItem value="pending">Pending</MenuItem>
@@ -338,7 +330,7 @@ const AdminOrderPage: NextPage<TProps> = () => {
                                         label="From Date"
                                         value={searchParams.startDate}
                                         onChange={handleStartDateChange}
-                                        slotProps={{ textField: { size: 'small' } }}
+                                        slotProps={{textField: {size: 'small'}}}
                                     />
                                 </LocalizationProvider>
 
@@ -347,7 +339,7 @@ const AdminOrderPage: NextPage<TProps> = () => {
                                         label="To Date"
                                         value={searchParams.endDate}
                                         onChange={handleEndDateChange}
-                                        slotProps={{ textField: { size: 'small' } }}
+                                        slotProps={{textField: {size: 'small'}}}
                                     />
                                 </LocalizationProvider>
 

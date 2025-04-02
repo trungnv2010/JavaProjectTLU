@@ -66,7 +66,7 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<ResponseResource<CategoryDTO>> createCategory(@RequestBody CategoryDTO categoryDTO) {
-        logger.info("Creating category with name: {}", categoryDTO.getName());
+//        logger.info("Creating category with name: {}", categoryDTO.getName());
         ResponseResource<CategoryDTO> response = categoryService.createCategory(categoryDTO);
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST)
                 .body(response);

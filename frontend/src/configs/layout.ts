@@ -1,5 +1,11 @@
 export const VerticalItems = [
     {
+        title: "Admin",
+        icon: "ri:admin-line",
+        path: "/admin",
+    },
+
+    {
         title: "User",
         icon: "solar:user-linear",
         path: "/admin/user",

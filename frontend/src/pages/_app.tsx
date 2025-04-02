@@ -37,6 +37,7 @@ import ReactHotToast from 'src/components/react-hot-toast'
 import {useSettings} from 'src/hooks/useSettings'
 import ThemeComponent from 'src/theme/ThemeComponent'
 import UserLayout from "src/views/layouts/UserLayout";
+import CartProvider from "src/contexts/CartContext";
 
 type ExtendedAppProps = AppProps & {
     Component: NextPage
@@ -116,26 +117,28 @@ export default function App(props: ExtendedAppProps) {
             </Head>
 
             <AuthProvider>
+                <CartProvider>
+                    <SettingsProvider {...(setConfig ? {pageSettings: setConfig()} : {})}>
+                        <SettingsConsumer>
+                            {({settings}) => {
+                                return (
+                                    <ThemeComponent settings={settings}>
+                                        <Guard authGuard={authGuard} guestGuard={guestGuard}>
+                                            <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard}
+                                                      authGuard={authGuard}>
+                                                {getLayout(<Component {...pageProps} />)}
+                                            </AclGuard>
+                                        </Guard>
+                                        <ReactHotToast>
+                                            <Toaster position={settings.toastPosition} toastOptions={toastOptions}/>
+                                        </ReactHotToast>
+                                    </ThemeComponent>
+                                )
+                            }}
+                        </SettingsConsumer>
+                    </SettingsProvider>
+                </CartProvider>
 
-                <SettingsProvider {...(setConfig ? {pageSettings: setConfig()} : {})}>
-                    <SettingsConsumer>
-                        {({settings}) => {
-                            return (
-                                <ThemeComponent settings={settings}>
-                                    <Guard authGuard={authGuard} guestGuard={guestGuard}>
-                                        <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard}
-                                                  authGuard={authGuard}>
-                                            {getLayout(<Component {...pageProps} />)}
-                                        </AclGuard>
-                                    </Guard>
-                                    <ReactHotToast>
-                                        <Toaster position={settings.toastPosition} toastOptions={toastOptions}/>
-                                    </ReactHotToast>
-                                </ThemeComponent>
-                            )
-                        }}
-                    </SettingsConsumer>
-                </SettingsProvider>
             </AuthProvider>
         </Provider>
     )
